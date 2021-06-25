@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+  <html lang="en">
+ <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ToDoList—最简单的待办事项列表</title>
+<style>
+  *{
+    padding:0;
+    margin:0;
+}
+ul{
+    list-style: none;
+}
+ol{
+    list-style: none;
+}
+body{
+    background-color: #cdcdcd;
+}
+h2{
+    margin:20px 0;
+    position: relative;
+}
+h2 span{
+    height: 20px;
+    width: 20px;
+    background-color: #E6E6FA;
+    border-radius: 50%;
+    position: absolute;
+    font-size:16px;
+    right: 0;
+    text-align: center;
+    line-height: 20px;
+    color:#666;
+}
+.container{
+    width:600px;
+    margin: 0 auto;
+
+}
+.f_left{
+    float: left;
+}
+.f_right{
+    float: right;
+}
+.title{
+    background-color: rgba(47, 47, 47, 0.98);
+    height: 50px;
+}
+.title span{
+    font-size:25px;
+    color:#ddd;
+    line-height: 50px;
+    display: block;
+}
+.title input{
+    border: none;
+    height: 25px;
+    width: 360px;
+    border-radius: 5px;
+    margin-top:12px;
+    text-indent: 1em;
+    box-shadow: 1px 1px 6px 0 #999 inset;
+}
+li{
+    height:60px;
+    position: relative;
+    border-left: 5px solid  #629A9C;
+    border-radius:2px;
+    background-color: #fff;
+    padding:5px 0;
+    margin-top:15px;
+}
+li p {
+    height:45px;
+    margin-left: 40px;
+    margin-right: 40px;
+}
+li .final{
+    height: 40px;
+    width: 22px;
+    position: absolute;
+    left: 10px;
+}
+
+li .del{
+    position: absolute;
+    right: 10px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border:6px double #fff;
+    top:2px;
+    background-color: #ccc;  
+    cursor:pointer;      
+}
+
+.done_list li{
+    border-left-color: #999;
+    background-color: #fff;
+    opacity: 0.5;
+}
+
+li .edit_submit{
+
+   position: absolute;
+   height:22px;
+   width:40px;
+}
+
+p{
+	height:20px;
+}
+</style>
+
+</head>
+
+<body>
+	<div class="title">
+    <div class="container">
+        <span class="f_left">ToDoList</span><input type="text" name="title" id="title" class="f_right" placeholder="添加todo" onkeyup="PushNewTodo(event)">
+    </div>
+</div>
+<div class="container">
+    <h2>待处理事项 <span id="todo_num" class="todo_num">0</span></h2>
+    <ul id="todo_list" class="todo_list">
+    </ul>
+</div>
+<div class="container">
+    <h2>已完成事项<span id="done_num" class="done_num">0</span></h2>
+    <ol id="done_list"class="done_list">
+        
+    </ol>
+</div>
+
+<p id="test"></p>
+</body>
+
+<script type="text/javascript">
+    //载入页面时显示缓存数据，实现页面状态的刷新后保持
+	showData();
+
+    //回车添加新的todo
+	function PushNewTodo(e){
+		if(e.keyCode!=13)
+			return;
+		var text=document.getElementById('title').value;
+        var local = getData();
+        var data = {title:text,done:false};
+        local.push(data);
+        saveData(local);
+        //将任务添加到正在进行的列表中
+        showData();
+        this.value = '';
+	}
+
+	//获取所有缓存数据
+   function getData(){
+       var data = localStorage.getItem('todoList');
+       if(data == null){
+           return [];
+       }else{
+           return JSON.parse(data);
+       }
+   }
+   
+   //将一个任务添加到列表,i是数据在数组中的编号,text为事务内容，done表示是否完成
+   function addList(i, text, done){
+   	       //动态创建条目
+           var new_li = document.createElement('li');
+           new_li.setAttribute('id',i);
+
+           var new_input=document.createElement('input');
+           new_input.setAttribute('type','checkbox');
+           new_input.setAttribute('class','final');
+           new_input.setAttribute('onclick','finish_todo(this)');
+           var new_p=document.createElement('p');
+           new_p.setAttribute('onclick','edit_item(this)');
+           //new_p.setAttribute('innerHTML',text);
+           new_p.innerHTML=text;
+           
+           var new_button=document.createElement('div');
+           new_button.setAttribute('class','del')
+           new_button.setAttribute('onclick','delData(this)');
+
+           new_li.appendChild(new_input);
+           new_li.appendChild(new_p);
+           new_li.appendChild(new_button);
+           
+           if(done){
+           	  document.getElementById('done_list').appendChild(new_li);
+           }
+           else{
+              document.getElementById('todo_list').appendChild(new_li);
+           }
+   }
+    
+   //更新待办事项和已完成事项的数目
+   function updataNum(num, done){ 
+       if(done){
+           document.getElementById('done_num').innerHTML=num;
+       }else{
+           document.getElementById('todo_num').innerHTML=num;
+       }
+   }
+
+   //将此时所存数据重新绘制成列表，显示在页面上
+   function showData(){
+   	   select_item=-1;    //每次变动列表都重置该变量
+       clearList();
+       var data = getData();
+       //记录已完成和未完成任务的个数
+       var doneNum  = 0;
+       var todoNum = 0;
+       if(data != null){
+           for(var i=0;i<data.length;i++){
+                var now=data[i];
+                if(now.done){
+                	doneNum++;
+                }
+                else{
+                	todoNum++;
+                }
+                addList(i,now.title,now.done);
+           }
+       }
+       updataNum(doneNum, true);
+       updataNum(todoNum, false);
+   }
+
+   //清空当前页面显示列表
+   function clearList(){
+       var el = document.getElementById('done_list');
+       var liNodes = document.getElementsByTagName("li");
+       //从下至上清空，先清空done_list
+       for(var i = liNodes.length-1; i >=0; i--){
+       	  if(el.children.length==0){
+         	break;
+          }
+          el.removeChild(liNodes[i]);
+         
+       }
+       //再清空todo_list
+       var er = document.getElementById('todo_list');
+       var liNodes = document.getElementsByTagName("li");
+       for(var i = liNodes.length-1; i >=0; i--){
+       	if(er.children.length==0){
+         	break;
+         }
+         er.removeChild(liNodes[i]);
+       }
+    }
+
+   
+   //从缓存获取所有数据
+   function getData(){
+       var data = localStorage.getItem('todoList');
+       if(data == null){
+           return [];
+       }else{
+           return JSON.parse(data);
+       }
+   }
+
+   //保存数据到缓存
+   function saveData(data){
+       localStorage.setItem('todoList', JSON.stringify(data));
+   }
+ 
+   //删除某项数据
+   function delData(obj){       
+       var id=obj.parentNode.id;
+       var data = getData();
+       data.splice(id,1);
+       saveData(data);
+       showData();
+   }
+   //完成某项事务
+   function finish_todo(obj){
+   	  var id=obj.parentNode.id;
+   	  var data=getData();
+   	  data[id].done=true;
+   	  saveData(data);
+   	  showData();
+   }
+
+   //记录当前被选中的条目编号，用于编辑功能
+   var selected_index=-1;
+   function edit_item(obj_p){
+   	   var obj=obj_p.parentNode;
+   	  //如果点击的是已完成事项，无视
+   	  var data=getData();
+   	  if(data[obj.id].done)
+   	  	return;
+   	  //连续两次点击同意条目，视为取消
+      if(obj.id==selected_index){
+      	selected_index=-1;
+      	obj.removeChild(obj.lastElementChild);
+      	obj.removeChild(obj.lastElementChild);
+      	//obj.removeChild(document.getElementById('button'+obj.id));
+      	obj.style.backgroundColor='#fff';
+      	return;
+      }
+      if(selected_index!=-1){
+      	document.getElementById(selected_index).style.backgroundColor='#fff';
+      }
+      selected_index=obj.id;
+      obj.style.backgroundColor='#dafcff'; 
+
+      var input=document.createElement('input');
+      input.setAttribute('type','text');
+      input.setAttribute('id','input'+obj.id);
+      input.setAttribute('class','edit_input');
+      
+      var button=document.createElement('button');
+      button.setAttribute('id','submit'+obj.id);
+      button.setAttribute('class','edit_submit');
+      button.setAttribute('onclick','submit_edit(this)');
+
+      obj.appendChild(input);
+      obj.appendChild(button);
+
+   }
+   
+   //提交用户的编辑内容
+   function submit_edit(obj){
+       var id=obj.parentNode.id;
+       var new_text=document.getElementById('input'+id).value;
+       if(new_text==""){
+       	 return;
+       }
+       data=getData();
+       data[id].title=new_text;
+       saveData(data);
+       showData();
+   }
+</script>
