@@ -104,15 +104,26 @@ li .del{
 }
 
 li .edit_submit{
-
    position: absolute;
    height:22px;
    width:40px;
+   border: 1px solid #ccc;
+   border-radius: 3px;
 }
 
-p{
-	height:20px;
+.done_button{
+	position:absolute;
+	height:35px;
+	width:60px;
+	right:80px;
+	top:80px;
+	border-width: 0px; /* 边框宽度 */
+	border-radius: 3px; /* 边框半径 */
+	background: #FFFFFF; /* 背景颜色 */
+	cursor: pointer; 
+	font-family: Microsoft YaHei;
 }
+
 </style>
 
 </head>
@@ -123,6 +134,7 @@ p{
         <span class="f_left">ToDoList</span><input type="text" name="title" id="title" class="f_right" placeholder="添加todo" onkeyup="PushNewTodo(event)">
     </div>
 </div>
+<button class="done_button" onclick="MoveAll()">全部完成</button>
 <div class="container">
     <h2>待处理事项 <span id="todo_num" class="todo_num">0</span></h2>
     <ul id="todo_list" class="todo_list">
@@ -319,6 +331,7 @@ p{
       button.setAttribute('class','edit_submit');
       button.setAttribute('onclick','submit_edit(this)');
 
+
       obj.appendChild(input);
       obj.appendChild(button);
 
@@ -335,5 +348,18 @@ p{
        data[id].title=new_text;
        saveData(data);
        showData();
+   }
+
+   //将全部todo设为done
+   function MoveAll(){
+   	  data=getData();
+   	  if(data==null){
+   	  	return;
+   	  }
+   	  for(var i=0;i<data.length;i++){
+   	  	 data[i].done=true;
+   	  }
+   	  saveData(data);
+   	  showData();
    }
 </script>
